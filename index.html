@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - O Fantasma</title>
+    <meta name="description" content="Dashboard de controle do robô trader O Fantasma">
+    <link rel="stylesheet" href="style.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Fira+Code:wght@400;600&display=swap" rel="stylesheet">
+    <!-- Phosphor Icons (para iconografia moderna) -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <!-- Chart.js para gráficos -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Barra lateral -->
+        <aside class="sidebar">
+            <div class="brand">
+                <div class="brand-icon">
+                    <i class="ph ph-ghost"></i>
+                </div>
+                <h2>O Fantasma</h2>
+                <span class="version">v2.0 Beta</span>
+            </div>
+
+            <nav class="nav-menu">
+                <a href="#" class="nav-item active">
+                    <i class="ph ph-squares-four"></i>
+                    <span>Visão Geral</span>
+                </a>
+                <a href="#" class="nav-item">
+                    <i class="ph ph-chart-line-up"></i>
+                    <span>Operações</span>
+                </a>
+                <a href="#" class="nav-item">
+                    <i class="ph ph-terminal-window"></i>
+                    <span>Logs do Sistema</span>
+                </a>
+                <a href="#" class="nav-item">
+                    <i class="ph ph-sliders"></i>
+                    <span>Configurações</span>
+                </a>
+            </nav>
+
+            <div class="system-status">
+                <div class="status-indicator online"></div>
+                <span>Conectado ao MT5</span>
+            </div>
+        </aside>
+
+        <!-- Conteúdo Principal -->
+        <main class="main-content">
+            <header class="topbar">
+                <div class="greeting">
+                    <h1>Painel de Controle</h1>
+                    <p>Monitoramento em tempo real do Fantasma.</p>
+                </div>
+                <div class="header-actions">
+                    <button class="btn btn-outline" id="btnTestConn">
+                        <i class="ph ph-arrows-clock-wise"></i> Testar Conexão
+                    </button>
+                    <button class="btn btn-danger" id="btnPanic">
+                        <i class="ph ph-warning-circle"></i> Pânico (Zerar Tudo)
+                    </button>
+                    <div class="user-profile">
+                        <div class="avatar"></div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Cards de Métricas -->
+            <section class="metrics-grid">
+                <div class="metric-card">
+                    <div class="metric-header">
+                        <i class="ph ph-wallet"></i>
+                        <h3>Lucro Diário</h3>
+                    </div>
+                    <div class="metric-body">
+                        <h2 class="profit positive">U$ +342.50</h2>
+                        <span class="trend up"><i class="ph ph-trend-up"></i> +12.5% desde ontem</span>
+                    </div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-header">
+                        <i class="ph ph-target"></i>
+                        <h3>Taxa de Acerto</h3>
+                    </div>
+                    <div class="metric-body">
+                        <h2>87.4%</h2>
+                        <span class="trend neutral">Últimas 50 operações</span>
+                    </div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-header">
+                        <i class="ph ph-activity"></i>
+                        <h3>Operações Hoje</h3>
+                    </div>
+                    <div class="metric-body">
+                        <h2>14</h2>
+                        <div class="win-loss">
+                            <span class="win">12 Wins</span>
+                            <span class="loss">2 Loss</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-header">
+                        <i class="ph ph-shield-check"></i>
+                        <h3>Drawdown</h3>
+                    </div>
+                    <div class="metric-body">
+                        <h2 class="warning">2.1%</h2>
+                        <span class="trend neutral">Dentro do limite de 5%</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Área Central com Gráfico e Terminal -->
+            <section class="dashboard-core">
+                <div class="chart-container glass-panel">
+                    <div class="panel-header">
+                        <h3>Desempenho de Capital</h3>
+                        <div class="chart-filters">
+                            <button class="filter-btn active">Hoje</button>
+                            <button class="filter-btn">1W</button>
+                            <button class="filter-btn">1M</button>
+                        </div>
+                    </div>
+                    <div class="chart-wrapper">
+                        <canvas id="balanceChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="terminal-container glass-panel">
+                    <div class="panel-header">
+                        <h3>Terminal do Robô <span class="blink">_</span></h3>
+                    </div>
+                    <div class="terminal-window" id="terminalOutput">
+                        <div class="log-line info"><span class="time">[08:00:12]</span> [SYS] Inicializando módulos do Fantasma...</div>
+                        <div class="log-line info"><span class="time">[08:00:15]</span> [SYS] Conectado ao servidor MetaTrader 5 (Ping: 12ms)</div>
+                        <div class="log-line success"><span class="time">[08:05:33]</span> [TRADE] Oportunidade identificada: COMPRA EUR/USD. Lote: 0.10</div>
+                        <div class="log-line info"><span class="time">[08:45:10]</span> [TRADE] Posição EUR/USD fechada no Profit. Lucro: $45.20</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Tabela de Operações Recentes -->
+            <section class="recent-trades glass-panel">
+                <div class="panel-header">
+                    <h3>Últimas Operações</h3>
+                </div>
+                <div class="table-responsive">
+                    <table class="trades-table">
+                        <thead>
+                            <tr>
+                                <th>Ativo</th>
+                                <th>Tipo</th>
+                                <th>Lote</th>
+                                <th>Abertura</th>
+                                <th>Fechamento</th>
+                                <th>Resultado</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tradesBody">
+                            <!-- Preenchido via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Modal para testar API local -->
+    <div class="modal-overlay" id="apiModal" style="display: none;">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>Conectar Robô Local</h2>
+                <button class="close-modal"><i class="ph ph-x"></i></button>
+            </div>
+            <div class="modal-body">
+                <p>Insira a URL local da API gerada pelo seu servidor Python/MT5.</p>
+                <input type="text" id="apiUrl" value="http://127.0.0.1:8000" class="input-modern" placeholder="http://127.0.0.1:8000">
+                <button class="btn btn-primary" id="btnSaveApi">Salvar Configuração</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
