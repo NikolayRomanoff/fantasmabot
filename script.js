@@ -1,43 +1,38 @@
+let API_URL = localStorage.getItem('fantasma_api_url') || 'http://localhost:5000';
+
 document.addEventListener('DOMContentLoaded', () => {
-    // Inicializar Modal de Configuração de API
+    // DOM Elements - v10.5
+    const statusIndicator = document.querySelector('.status-indicator');
+    const terminal = document.getElementById('terminalOutput');
+    const tbody = document.getElementById('tradesBody');
+    const btnPanic = document.getElementById('btnPanic');
+    const btnTestConn = document.getElementById('btnTestConn');
+    
+    // Toggles and Strategirs
+    const btnToggleBasket = document.getElementById('btnToggleBasket');
+    const btnTogglePartial = document.getElementById('btnTogglePartial');
+    const btnToggleSniper = document.getElementById('btnToggleSniper');
+    const inputAlvoCesto = document.getElementById('inputAlvoCesto');
+    const basketStatusText = document.getElementById('basketStatusText');
+
+    // Modal UI
     const modal = document.getElementById('apiModal');
     const closeBtn = document.querySelector('.close-modal');
     const saveBtn = document.getElementById('btnSaveApi');
-    const systemStatus = document.querySelector('.system-status');
-    const statusIndicator = document.querySelector('.status-indicator');
+    const systemStatusClick = document.querySelector('.system-status');
 
-    // Inicialização do Gráfico com Chart.js
+    // Chart initialization
     const ctx = document.getElementById('balanceChart').getContext('2d');
-    
-    // Dados simulados para o gráfico
-    const labels = Array.from({length: 20}, (_, i) => `${8+Math.floor(i/2)}:${i%2==0?'00':'30'}`);
-    const dataPoints = [];
-    let currentBalance = 10000;
-    
-    for(let i=0; i<20; i++) {
-        dataPoints.push(currentBalance);
-        currentBalance += (Math.random() * 150) - 50; // Tendência levemente positiva
-    }
-
-    const gradient = ctx.createLinearGradient(0, 0, 0, 350);
-    gradient.addColorStop(0, 'rgba(0, 240, 255, 0.4)');
-    gradient.addColorStop(1, 'rgba(0, 240, 255, 0.0)');
-
     const chartConfig = {
         type: 'line',
         data: {
-            labels: labels,
+            labels: [],
             datasets: [{
-                label: 'Capital Total (USD)',
-                data: dataPoints,
+                label: 'Equity (USD)',
+                data: [],
                 borderColor: '#00f0ff',
-                backgroundColor: gradient,
+                backgroundColor: 'rgba(0, 240, 255, 0.1)',
                 borderWidth: 2,
-                pointBackgroundColor: '#07070a',
-                pointBorderColor: '#00f0ff',
-                pointBorderWidth: 2,
-                pointRadius: 3,
-                pointHoverRadius: 6,
                 fill: true,
                 tension: 0.4
             }]
@@ -45,142 +40,158 @@ document.addEventListener('DOMContentLoaded', () => {
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            plugins: {
-                legend: { display: false },
-                tooltip: {
-                    backgroundColor: 'rgba(20, 20, 25, 0.9)',
-                    titleColor: '#00f0ff',
-                    bodyColor: '#fff',
-                    borderColor: 'rgba(0, 240, 255, 0.3)',
-                    borderWidth: 1,
-                    padding: 10,
-                    displayColors: false,
-                    callbacks: {
-                        label: function(context) {
-                            return 'U$ ' + context.parsed.y.toFixed(2);
-                        }
-                    }
-                }
-            },
+            plugins: { legend: { display: false } },
             scales: {
-                x: {
-                    grid: { color: 'rgba(255, 255, 255, 0.05)', tickLength: 4 },
-                    ticks: { color: '#a0a0b0', maxTicksLimit: 8 }
-                },
-                y: {
-                    grid: { color: 'rgba(255, 255, 255, 0.05)', tickLength: 4 },
-                    ticks: {
-                        color: '#a0a0b0',
-                        callback: function(value) { return '$' + value; }
-                    }
-                }
-            },
-            interaction: {
-                intersect: false,
-                mode: 'index',
-            },
+                x: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#a0a0b0' } },
+                y: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#a0a0b0' } }
+            }
         }
     };
-
     const balanceChart = new Chart(ctx, chartConfig);
 
-    // Gerar Trades Simulados O Fantasma
-    const tbody = document.getElementById('tradesBody');
-    const assets = ['EURUSD', 'GBPUSD', 'XAUUSD', 'USDCAD'];
-    const types = ['Buy', 'Sell'];
-    
-    function addRandomTrade() {
-        const tr = document.createElement('tr');
-        const isWin = Math.random() > 0.3; // 70% win rate simulado
-        const type = types[Math.floor(Math.random() * types.length)];
-        const cls = type === 'Buy' ? 'buy' : 'sell';
-        const pnl = isWin ? (Math.random() * 40 + 10).toFixed(2) : -(Math.random() * 20 + 5).toFixed(2);
-        
-        tr.innerHTML = `
-            <td><strong>${assets[Math.floor(Math.random() * assets.length)]}</strong></td>
-            <td><span class="badge ${cls}">${type.toUpperCase()}</span></td>
-            <td>0.${Math.floor(Math.random() * 9) + 1}0</td>
-            <td style="color: #a0a0b0;">1.08${Math.floor(Math.random() * 900) + 100}</td>
-            <td style="color: #a0a0b0;">1.08${Math.floor(Math.random() * 900) + 100}</td>
-            <td class="${isWin ? 'success' : 'danger'}" style="font-weight: 700;">${isWin ? '+U$' : '-U$'}${Math.abs(pnl)}</td>
-        `;
-        
-        tbody.insertBefore(tr, tbody.firstChild);
-        if(tbody.children.length > 5) {
-            tbody.removeChild(tbody.lastChild);
-        }
-        
-        // Adicionar log ao terminal
-        addLog(type, isWin, Math.abs(pnl));
-    }
-
-    // Inicializar com 5 operações
-    for(let i=0; i<5; i++) {
-        addRandomTrade();
-    }
-
-    // Adicionar novo trade a cada 10-25 segundos simulando atividade
-    setInterval(addRandomTrade, Math.random() * 15000 + 10000);
-
-    // Função de Terminal Simulado
-    const terminal = document.getElementById('terminalOutput');
-    
-    function addLog(type, isWin, amt) {
+    function addLog(msg, type = 'info') {
         const now = new Date();
         const timeStr = `[${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}]`;
         const div = document.createElement('div');
-        
-        div.className = `log-line ${isWin ? 'success' : 'error'}`;
-        div.innerHTML = `<span class="time">${timeStr}</span> [TRADE] Posição ${type.toUpperCase()} fechada. ${isWin ? 'Lucro' : 'Prejuízo'}: $${amt}`;
-        
+        div.className = `log-line ${type}`;
+        div.innerHTML = `<span class="time">${timeStr}</span> ${msg}`;
         terminal.appendChild(div);
         terminal.scrollTop = terminal.scrollHeight;
     }
 
-    // Modal Events
-    systemStatus.addEventListener('click', () => {
-        modal.style.display = 'flex';
-    });
+    async function updateStatus() {
+        try {
+            const res = await fetch(`${API_URL}/api/status`);
+            const data = await res.json();
 
-    closeBtn.addEventListener('click', () => {
-        modal.style.display = 'none';
-    });
+            if (data.error) throw new Error(data.error);
 
-    saveBtn.addEventListener('click', () => {
-        const newUrl = document.getElementById('apiUrl').value;
-        const btnTest = document.getElementById('btnTestConn');
-        
-        modal.style.display = 'none';
-        
-        // Simular salvamento e conexão
-        statusIndicator.classList.remove('online');
-        statusIndicator.style.backgroundColor = '#ffb800'; // warning/connecting state
-        statusIndicator.style.animation = 'none';
-        
-        terminal.innerHTML += `<div class="log-line info"><span class="time">[SYS]</span> Conectando a ${newUrl}...</div>`;
-        terminal.scrollTop = terminal.scrollHeight;
-        
-        // Ícone de loading no botão
-        const oldHtml = btnTest.innerHTML;
-        btnTest.innerHTML = '<i class="ph ph-spinner ph-spin"></i> Conectando...';
+            // Update Metrics
+            document.querySelector('.metric-card:nth-child(1) h2').innerText = `U$ ${data.profit.toFixed(2)}`;
+            document.querySelector('.metric-card:nth-child(2) h2').innerText = `${data.win_rate.toFixed(1)}%`;
+            document.querySelector('.metric-card:nth-child(3) h2').innerText = data.total_trades;
+            document.querySelector('.metric-card:nth-child(4) h2').innerText = `U$ ${data.balance.toFixed(2)}`;
 
-        setTimeout(() => {
+            // Update Chart
+            const now = new Date().toLocaleTimeString();
+            if (balanceChart.data.labels.length > 20) {
+                balanceChart.data.labels.shift();
+                balanceChart.data.datasets[0].data.shift();
+            }
+            balanceChart.data.labels.push(now);
+            balanceChart.data.datasets[0].data.push(data.equity);
+            balanceChart.update();
+
+            // Status Indicator
             statusIndicator.classList.add('online');
-            statusIndicator.style.backgroundColor = '';
-            statusIndicator.style.animation = '';
             
-            terminal.innerHTML += `<div class="log-line success"><span class="time">[SYS]</span> Conexão estabelecida com sucesso via WebSocket!</div>`;
-            terminal.scrollTop = terminal.scrollHeight;
-            
-            btnTest.innerHTML = oldHtml;
-        }, 2000);
-    });
+            // Strategy UI Update
+            if (data.sniper_ativo) {
+                btnToggleSniper.classList.add('active');
+                document.getElementById('txtToggleSniper').innerText = 'Ligado';
+            } else {
+                btnToggleSniper.classList.remove('active');
+                document.getElementById('txtToggleSniper').innerText = 'Desligado';
+            }
 
-    // Pânico Event
-    document.getElementById('btnPanic').addEventListener('click', () => {
-        if(confirm('ALERTA DE SEGURANÇA: Tem certeza que deseja zerar TODAS as posições do robô?')) {
-            terminal.innerHTML += `<div class="log-line error blink"><span class="time">[SYS]</span> SINAL DE PÂNICO ENVIADO! Fechando todas as ordens a mercado...</div>`;
-            terminal.scrollTop = terminal.scrollHeight;
+            if (data.usar_saida_cesto) {
+                btnToggleBasket.classList.add('active');
+                document.getElementById('txtToggleBasket').innerText = 'Ativado';
+                basketStatusText.innerText = `LIGADO (Alvo: $${data.alvo_cesto})`;
+            } else {
+                btnToggleBasket.classList.remove('active');
+                document.getElementById('txtToggleBasket').innerText = 'Desativado';
+                basketStatusText.innerText = `DESLIGADO`;
+            }
+
+            inputAlvoCesto.value = data.alvo_cesto;
+
+        } catch (err) {
+            statusIndicator.classList.remove('online');
+            console.error("Erro ao carregar status:", err);
+        }
+    }
+
+    async function updateTrades() {
+        try {
+            const res = await fetch(`${API_URL}/api/trades`);
+            const trades = await res.json();
+
+            tbody.innerHTML = '';
+            trades.forEach(t => {
+                const tr = document.createElement('tr');
+                const isWin = t.profit >= 0;
+                tr.innerHTML = `
+                    <td><strong>${t.symbol}</strong></td>
+                    <td><span class="badge ${t.type.toLowerCase()}">${t.type}</span></td>
+                    <td>${t.lot.toFixed(2)}</td>
+                    <td style="color: #a0a0b0;">${t.price.toFixed(5)}</td>
+                    <td style="color: #a0a0b0;">${t.modo}</td>
+                    <td class="${isWin ? 'success' : 'danger'}" style="font-weight: 700;">${isWin ? '+U$' : '-U$'}${Math.abs(t.profit).toFixed(2)}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        } catch (err) {
+            console.error("Erro ao carregar trades:", err);
+        }
+    }
+
+    // Handlers
+    btnPanic.addEventListener('click', async () => {
+        if (confirm('ALERTA: Deseja ZERAR todas as posições AGORA?')) {
+            addLog("!!! SINAL DE PÂNICO ENVIADO !!!", "error");
+            await fetch(`${API_URL}/api/panic`, { method: 'POST' });
         }
     });
+
+    btnTestConn.addEventListener('click', () => {
+        addLog("Testando conexão...");
+        updateStatus();
+        updateTrades();
+    });
+
+    btnToggleSniper.addEventListener('click', async () => {
+        const res = await fetch(`${API_URL}/api/toggle_sniper`, { method: 'POST' });
+        const data = await res.json();
+        addLog(`Modo Sniper: ${data.sniper_ativo ? 'LIGADO' : 'DESLIGADO'}`, data.sniper_ativo ? 'success' : 'info');
+        updateStatus();
+    });
+
+    btnToggleBasket.addEventListener('click', async () => {
+        const res = await fetch(`${API_URL}/api/toggle_basket`, { method: 'POST' });
+        const data = await res.json();
+        addLog(`Saída de Cesto: ${data.usar_saida_cesto ? 'ATIVADA' : 'DESATIVADA'}`, data.usar_saida_cesto ? 'success' : 'info');
+        updateStatus();
+    });
+
+    inputAlvoCesto.addEventListener('change', async () => {
+        const novoAlvo = inputAlvoCesto.value;
+        await fetch(`${API_URL}/api/set_alvo_cesto`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ alvo: novoAlvo })
+        });
+        addLog(`Alvo do Cesto atualizado para: $${novoAlvo}`, 'info');
+    });
+
+    // Modal logic for Remote connection
+    systemStatusClick.addEventListener('click', () => { modal.style.display = 'flex'; });
+    closeBtn.addEventListener('click', () => { modal.style.display = 'none'; });
+    saveBtn.addEventListener('click', () => {
+        const newUrl = document.getElementById('apiUrl').value;
+        localStorage.setItem('fantasma_api_url', newUrl);
+        API_URL = newUrl;
+        modal.style.display = 'none';
+        addLog(`Conexão configurada para: ${newUrl}`, 'success');
+        updateStatus();
+    });
+
+    // Loop
+    setInterval(updateStatus, 5000);
+    setInterval(updateTrades, 10000);
+
+    // Init
+    updateStatus();
+    updateTrades();
+    addLog("Fantasma v10.5 (Build 2026) Online.");
 });

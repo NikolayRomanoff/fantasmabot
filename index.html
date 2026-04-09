@@ -119,6 +119,55 @@
                     </div>
                 </div>
             </section>
+            
+            <!-- CONTROLE DE ESTRATÉGIA v10.5 -->
+            <section class="strategy-controls glass-panel">
+                <div class="panel-header">
+                    <h3><i class="ph ph-wrench"></i> Gestão de Risco e Estratégia</h3>
+                    <div class="status-badge" id="basketStatusText">Aguardando...</div>
+                </div>
+                <div class="controls-grid">
+                    <div class="control-item">
+                        <div class="control-info">
+                            <h4>Saída de Cesto (Global TP)</h4>
+                            <p>Fecha todas as ordens se o lucro total bater o alvo.</p>
+                        </div>
+                        <div class="control-action">
+                             <div class="input-group">
+                                 <span>Alvo U$:</span>
+                                 <input type="number" id="inputAlvoCesto" value="15" step="5" class="input-small">
+                             </div>
+                             <button class="btn btn-toggle" id="btnToggleBasket">
+                                 <i class="ph ph-power"></i> <span id="txtToggleBasket">Ativar</span>
+                             </button>
+                        </div>
+                    </div>
+                    
+                    <div class="control-item">
+                        <div class="control-info">
+                            <h4>Realização Parcial</h4>
+                            <p>Fecha 50% do lote em alvos intermediários.</p>
+                        </div>
+                        <div class="control-action">
+                             <button class="btn btn-toggle active" id="btnTogglePartial">
+                                 <i class="ph ph-check-circle"></i> <span>Ativado</span>
+                             </button>
+                        </div>
+                    </div>
+                    
+                    <div class="control-item">
+                        <div class="control-info">
+                            <h4>Modo Sniper</h4>
+                            <p>M15 para entradas de reversão de alta precisão.</p>
+                        </div>
+                        <div class="control-action">
+                             <button class="btn btn-toggle" id="btnToggleSniper">
+                                 <i class="ph ph-crosshair"></i> <span id="txtToggleSniper">Ligar</span>
+                             </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
 
             <!-- Área Central com Gráfico e Terminal -->
             <section class="dashboard-core">
