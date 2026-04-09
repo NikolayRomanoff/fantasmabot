@@ -3,12 +3,11 @@ let API_URL = localStorage.getItem('fantasma_api_url') || 'http://localhost:5000
 document.addEventListener('DOMContentLoaded', () => {
     // DOM Elements - v10.5
     const statusIndicator = document.querySelector('.status-indicator');
-    const terminal = document.getElementById('terminalOutput');
     const tbody = document.getElementById('tradesBody');
     const btnPanic = document.getElementById('btnPanic');
     const btnTestConn = document.getElementById('btnTestConn');
     
-    // Toggles and Strategirs
+    // Toggles and Strategies
     const btnToggleBasket = document.getElementById('btnToggleBasket');
     const btnTogglePartial = document.getElementById('btnTogglePartial');
     const btnToggleSniper = document.getElementById('btnToggleSniper');
@@ -49,16 +48,6 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     const balanceChart = new Chart(ctx, chartConfig);
 
-    function addLog(msg, type = 'info') {
-        const now = new Date();
-        const timeStr = `[${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}]`;
-        const div = document.createElement('div');
-        div.className = `log-line ${type}`;
-        div.innerHTML = `<span class="time">${timeStr}</span> ${msg}`;
-        terminal.appendChild(div);
-        terminal.scrollTop = terminal.scrollHeight;
-    }
-
     async function updateStatus() {
         try {
             const res = await fetch(`${API_URL}/api/status`);
@@ -66,11 +55,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (data.error) throw new Error(data.error);
 
-            // Update Metrics
-            document.querySelector('.metric-card:nth-child(1) h2').innerText = `U$ ${data.profit.toFixed(2)}`;
-            document.querySelector('.metric-card:nth-child(2) h2').innerText = `${data.win_rate.toFixed(1)}%`;
-            document.querySelector('.metric-card:nth-child(3) h2').innerText = data.total_trades;
-            document.querySelector('.metric-card:nth-child(4) h2').innerText = `U$ ${data.balance.toFixed(2)}`;
+            // Update Metrics Grid (v10.5 Fix)
+            const cards = document.querySelectorAll('.metric-card');
+            
+            // Card 1: Lucro Hoje
+            const profitH2 = cards[0].querySelector('h2');
+            profitH2.innerText = `U$ ${data.lucro_hoje.toFixed(2)}`;
+            profitH2.className = data.lucro_hoje >= 0 ? 'profit positive' : 'profit negative';
+            
+            // Card 2: Win Rate
+            cards[1].querySelector('h2').innerText = `${data.win_rate.toFixed(1)}%`;
+            
+            // Card 3: Operações Hoje
+            cards[2].querySelector('h2').innerText = data.total_hoje;
+            cards[2].querySelector('.win-loss').innerHTML = `<span class="win">${data.trades_hoje}</span>`;
+            
+            // Card 4: Saldo Atual
+            cards[3].querySelector('h2').innerText = `U$ ${data.balance.toFixed(2)}`;
 
             // Update Chart
             const now = new Date().toLocaleTimeString();
@@ -85,7 +86,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // Status Indicator
             statusIndicator.classList.add('online');
             
-            // Strategy UI Update
+            // Sniper/Basket Status UI Update
             if (data.sniper_ativo) {
                 btnToggleSniper.classList.add('active');
                 document.getElementById('txtToggleSniper').innerText = 'Ligado';
@@ -139,29 +140,29 @@ document.addEventListener('DOMContentLoaded', () => {
     // Handlers
     btnPanic.addEventListener('click', async () => {
         if (confirm('ALERTA: Deseja ZERAR todas as posições AGORA?')) {
-            addLog("!!! SINAL DE PÂNICO ENVIADO !!!", "error");
             await fetch(`${API_URL}/api/panic`, { method: 'POST' });
         }
     });
 
     btnTestConn.addEventListener('click', () => {
-        addLog("Testando conexão...");
         updateStatus();
         updateTrades();
     });
 
     btnToggleSniper.addEventListener('click', async () => {
-        const res = await fetch(`${API_URL}/api/toggle_sniper`, { method: 'POST' });
-        const data = await res.json();
-        addLog(`Modo Sniper: ${data.sniper_ativo ? 'LIGADO' : 'DESLIGADO'}`, data.sniper_ativo ? 'success' : 'info');
-        updateStatus();
+        try {
+            const res = await fetch(`${API_URL}/api/toggle_sniper`, { method: 'POST' });
+            const data = await res.json();
+            updateStatus();
+        } catch(e) { console.error(e); }
     });
 
     btnToggleBasket.addEventListener('click', async () => {
-        const res = await fetch(`${API_URL}/api/toggle_basket`, { method: 'POST' });
-        const data = await res.json();
-        addLog(`Saída de Cesto: ${data.usar_saida_cesto ? 'ATIVADA' : 'DESATIVADA'}`, data.usar_saida_cesto ? 'success' : 'info');
-        updateStatus();
+        try {
+            const res = await fetch(`${API_URL}/api/toggle_basket`, { method: 'POST' });
+            const data = await res.json();
+            updateStatus();
+        } catch(e) { console.error(e); }
     });
 
     inputAlvoCesto.addEventListener('change', async () => {
@@ -171,7 +172,7 @@ document.addEventListener('DOMContentLoaded', () => {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ alvo: novoAlvo })
         });
-        addLog(`Alvo do Cesto atualizado para: $${novoAlvo}`, 'info');
+        updateStatus();
     });
 
     // Modal logic for Remote connection
@@ -182,7 +183,6 @@ document.addEventListener('DOMContentLoaded', () => {
         localStorage.setItem('fantasma_api_url', newUrl);
         API_URL = newUrl;
         modal.style.display = 'none';
-        addLog(`Conexão configurada para: ${newUrl}`, 'success');
         updateStatus();
     });
 
@@ -193,5 +193,4 @@ document.addEventListener('DOMContentLoaded', () => {
     // Init
     updateStatus();
     updateTrades();
-    addLog("Fantasma v10.5 (Build 2026) Online.");
 });
