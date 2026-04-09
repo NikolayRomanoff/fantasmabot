@@ -367,7 +367,7 @@ body {
 /* Dashboard Core Layout */
 .dashboard-core {
     display: grid;
-    grid-template-columns: 2fr 1fr;
+    grid-template-columns: 1fr;
     gap: 1.5rem;
     height: 350px;
 }
